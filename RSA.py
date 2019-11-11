@@ -1,11 +1,11 @@
-'''
+"""
 Universidad del Valle de Guatemala
-Matemática discreta
-Sección: 10
+Matematica discreta
+Seccion: 10
 Jennifer Sandoval  18962
 Esteban del Valle  18221
 Luis Quezada		18028
-'''
+"""
 
 import random, argparse
 
