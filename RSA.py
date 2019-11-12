@@ -164,20 +164,17 @@ def decrypt(blocks, block_size = 2):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('command',help='encrypt o decrypt')
-parser.add_argument('p',help='p')
-parser.add_argument('q',help='q')
-parser.add_argument('msg',help='Mensaje a encriptar o decriptar')
 args = parser.parse_args()
 
 chooseKeys()
 
-instruction = input('Would you like to encrypt or decrypt? (Enter e or d): ')
-
 if (args.command == 'encrypt'):
-    print(encrypt(args.msg))
+    msg = input("MSG: ")
+    print(encrypt(msg))
 
 elif (args.command == 'decrypt'):
-    print(decrypt(args.msg))
+    msg = input("MSG: ")
+    print(decrypt(msg))
 
 
 
