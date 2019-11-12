@@ -2,28 +2,28 @@
 Universidad del Valle de Guatemala
 Matematica discreta
 Seccion: 10
+Luis Quezada       18028
 Jennifer Sandoval  18962
 Esteban del Valle  18221
-Luis Quezada		18028
 """
 
-import random, argparse
+import random
 
-letters = {'a':1,'b':2,'c':3,'d':4,'e':5,'f':6,'g':7,'h':8,'i':9,'j':10,'k':11,'l':12,'n':13,'o':14,'p':15,'q':16,'r':17,'s':18,'t':19,'u':20,'v':21,'w':22,'x':23,'y':24,'z':25}
-
-# FUNCTIONS
+# Para determinar si es primo (advertencia: tiene gran costo computacional con numeros grandes)
 def isPrime(num):
     for i in range(2,(num)):
         if (num%i == 0):
             return False   
     return True
-  
+
+# Algoritmo de euclides
 def gcd(a,b): 
     if b==0: 
         return a 
     else: 
         return gcd(b,a%b)
 
+# Algoritmo de euclides extendido
 def xgcd(a, b):
     x, old_x = 0, 1
     y, old_y = 1, 0
@@ -35,151 +35,128 @@ def xgcd(a, b):
         old_y, y = y, old_y - quotient * y
     return a, old_x, old_y
 
-def chooseE(totient):
+def getE(t):
     while (True):
-        e = random.randrange(2, totient)
-        if (gcd(e, totient) == 1):
+        e = random.randrange(2, t)
+        if (gcd(e, t) == 1):
             return e
 
-def chooseKeys():
-        # choose two random numbers within the range of lines where 
-        # the prime numbers are not too small and not too big
-        rand1 = random.randint(100, 300)
-        rand2 = random.randint(100, 300)
+# Generador de claves publicas y privadas
+def getKeys():
+        # seleccion de primos (los numeros 100 y 200 pueden editarse para aumentar la seguridad del cifrado)
+        # estos indican el rango de lineas de 'primes.txt' del que se seleccionaran los primos
+        r1 = random.randint(100, 200)
+        r2 = random.randint(100, 200)
 
-        # store the txt file of prime numbers in a python list
-        fo = open('primes.txt', 'r')
-        lines = fo.read().splitlines()
-        fo.close()
+        # importar los primos como una lista
+        primesFile = open('primes.txt', 'r')
+        allPrimes = primesFile.read().splitlines()
+        primesFile.close()
 
-        # store our prime numbers in these variables
-        prime1 = int(lines[rand1])
-        prime2 = int(lines[rand2])
+        # asignar los primos seleccionados
+        prime1 = int(allPrimes[r1])
+        prime2 = int(allPrimes[r2])
 
-        # compute n, totient, e
+        # encontrar n y la clave publica (e)
         n = prime1 * prime2
-        totient = (prime1 - 1) * (prime2 - 1)
-        e = chooseE(totient)
+        t = (prime1-1) * (prime2-1) # phi
+        e = chooseE(t)
 
-        # compute d, 1 < d < totient such that ed = 1 (mod totient)
-        # e and d are inverses (mod totient)
-        gcd, x, y = xgcd(e, totient)
+        # determinar si e*d = 1 (mod t) primos relativos
+        gcd, x, y = xgcd(e, t)
 
-        # make sure d is positive
+        # la clave privada (d) debe ser positiva
         if (x < 0):
-            d = x + totient
+            d = x + t
         else:
             d = x
+        return [n, e, d] # claves: [n,publica,privada]
 
-        # write the public keys n and e to a file
-        f_public = open('public_keys.txt', 'w')
-        f_public.write(str(n) + '\n')
-        f_public.write(str(e) + '\n')
-        f_public.close()
+def encrypt(msg,n,e,blockSize=2):
+    n = int(n)
+    e = int(e)
 
-        f_private = open('private_keys.txt', 'w')
-        f_private.write(str(n) + '\n')
-        f_private.write(str(d) + '\n')
-        f_private.close()
+    encryptedBlocks = []
+    textASCII = -1 
 
-def encrypt(message, file_name = 'public_keys.txt', block_size = 2):
-    try:
-        fo = open(file_name, 'r')
+    # convertir a ASCII por bloques 
+    if (len(msg) > 0):
+        textASCII = ord(msg[0])
 
-    # check for the possibility that the user tries to encrypt something
-    # using a public key that is not found
-    except FileNotFoundError:
-        print('That file is not found.')
-    else:
-        n = int(fo.readline())
-        e = int(fo.readline())
-        fo.close()
+    for i in range(1, len(msg)):
+        if (i % blockSize == 0):
+            encryptedBlocks.append(textASCII)
+            textASCII = 0
+        # mult por 1000 para correr crifras 3 veces (cantidad de digitos maxima)
+        textASCII = textASCII * 1000 + ord(msg[i])
+    encryptedBlocks.append(textASCII)
 
-        encrypted_blocks = []
-        ciphertext = -1
+    # encriptar cada bloque del tamanio establecido al elevar a 'e' en mod n
+    for i in range(len(encryptedBlocks)):
+        encryptedBlocks[i] = str((encryptedBlocks[i]**e) % n)
 
-        if (len(message) > 0):
-            # initialize ciphertext to the ASCII of the first character of message
-            ciphertext = ord(message[0])
+    # unir todos los bloques como un string con el msg encriptado
+    encryptedMsg = " ".join(encryptedBlocks)
+    return encryptedMsg
 
-        for i in range(1, len(message)):
-            # add ciphertext to the list if the max block size is reached
-            # reset ciphertext so we can continue adding ASCII codes
-            if (i % block_size == 0):
-                encrypted_blocks.append(ciphertext)
-                ciphertext = 0
 
-            # multiply by 1000 to shift the digits over to the left by 3 places
-            # because ASCII codes are a max of 3 digits in decimal
-            ciphertext = ciphertext * 1000 + ord(message[i])
+def decrypt(blocks,n,d,blockSize=2):
+    n = int(n)
+    d = int(d)
 
-        # add the last block to the list
-        encrypted_blocks.append(ciphertext)
-
-        # encrypt all of the numbers by taking it to the power of e
-        # and modding it by n
-        for i in range(len(encrypted_blocks)):
-            encrypted_blocks[i] = str((encrypted_blocks[i]**e) % n)
-
-        # create a string from the numbers
-        encrypted_message = " ".join(encrypted_blocks)
-
-        return encrypted_message
-
-def decrypt(blocks, block_size = 2):
-
-    fo = open('private_keys.txt', 'r')
-    n = int(fo.readline())
-    d = int(fo.readline())
-    fo.close()
-
-    # turns the string into a list of ints
+    # separar los bloques
     list_blocks = blocks.split(' ')
-    int_blocks = []
+    intBlocks = []
 
-    for s in list_blocks:
-        int_blocks.append(int(s))
+    for k in list_blocks:
+        intBlocks.append(int(k))
 
-    message = ""
+    msg = ""
 
-    # converts each int in the list to block_size number of characters
-    # by default, each int represents two characters
-    for i in range(len(int_blocks)):
-        # decrypt all of the numbers by taking it to the power of d
-        # and modding it by n
-        int_blocks[i] = (int_blocks[i]**d) % n
+    # convertir los numeros a letras
+    for i in range(len(intBlocks)):
+        # se decripta elevando los numeros a d en mod n
+        intBlocks[i] = (intBlocks[i]**d) % n
 
-        tmp = ""
-        # take apart each block into its ASCII codes for each character
-        # and store it in the message string
-        for c in range(block_size):
-            tmp = chr(int_blocks[i] % 1000) + tmp
-            int_blocks[i] //= 1000
-        message += tmp
-
-    return message
+        block = ""
+        
+        # revertir cada bloque de ASCII a letras y concatenar en msg
+        for c in range(blockSize):
+            block = chr(intBlocks[i] % 1000) + block
+            intBlocks[i] //= 1000
+        msg += block
+    return msg
 
 
-# MAIN _______________________________________________________________
+'''
+_______________________________________________________________
+                              MAIN
+'''
 
-parser = argparse.ArgumentParser()
-parser.add_argument('command',help='encrypt o decrypt')
-args = parser.parse_args()
+print('\n||| CRYPT0 M3NU ||| \n 1. Generar claves \n 2. Encriptar \n 3. Decriptar')
 
-chooseKeys()
+options = ['1','2','3']
+command = "nan"
 
-if (args.command == 'encrypt'):
-    msg = input("MSG: ")
-    print(encrypt(msg))
-
-elif (args.command == 'decrypt'):
-    msg = input("MSG: ")
-    print(decrypt(msg))
+while (command not in options):
+    command = input("\n>> Proceso a realizar? (1 / 2 / 3): ")
 
 
+if command == '1':
+    keys = getKeys() # claves: [n,publica,privada]
+    print('\nn: {}\nClave Publica: {}\nClave Privada: {}'.format(keys[0],keys[1],keys[2]))
 
+if command == '2':
+    msg = input("\nMSG: ")
+    n = input("n: ")
+    e = input("Clave publica: ")
+    print('>> MSG encriptado: {}'.format(encrypt(msg,n,e)))
 
-
+elif (command == '3'):
+    msg = input("\nMSG: ")
+    n = input("n: ")
+    d = input("Clave privada: ")
+    print('>> MSG decriptado: {}'.format(decrypt(msg,n,d)))
 
 
 
