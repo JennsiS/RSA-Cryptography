@@ -60,7 +60,7 @@ def getKeys():
         # encontrar n y la clave publica (e)
         n = prime1 * prime2
         t = (prime1-1) * (prime2-1) # phi
-        e = chooseE(t)
+        e = getE(t)
 
         # determinar si e*d = 1 (mod t) primos relativos
         gcd, x, y = xgcd(e, t)
@@ -144,19 +144,19 @@ while (command not in options):
 
 if command == '1':
     keys = getKeys() # claves: [n,publica,privada]
-    print('\nn: {}\nClave Publica: {}\nClave Privada: {}'.format(keys[0],keys[1],keys[2]))
+    print('\nn: {}\nClave Publica: {}\nClave Privada: {}\n'.format(keys[0],keys[1],keys[2]))
 
 if command == '2':
     msg = input("\nMSG: ")
     n = input("n: ")
     e = input("Clave publica: ")
-    print('>> MSG encriptado: {}'.format(encrypt(msg,n,e)))
+    print('>> MSG encriptado: {}\n'.format(encrypt(msg,n,e)))
 
 elif (command == '3'):
     msg = input("\nMSG: ")
     n = input("n: ")
     d = input("Clave privada: ")
-    print('>> MSG decriptado: {}'.format(decrypt(msg,n,d)))
+    print('>> MSG decriptado: {}\n'.format(decrypt(msg,n,d)))
 
 
 
