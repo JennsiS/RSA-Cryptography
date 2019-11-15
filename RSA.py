@@ -18,13 +18,13 @@ def isPrime(num):
 
 # Algoritmo de euclides
 def gcd(a,b): 
-    if b==0: 
+    if b == 0: 
         return a 
     else: 
-        return gcd(b,a%b)
+        return gcd(b,a % b)
 
 # Algoritmo de euclides extendido
-def xgcd(a, b):
+def gcdExt(a, b):
     x, old_x = 0, 1
     y, old_y = 1, 0
 
@@ -63,7 +63,7 @@ def getKeys():
         e = getE(t)
 
         # determinar si e*d = 1 (mod t) primos relativos
-        gcd, x, y = xgcd(e, t)
+        gcd, x, y = gcdExt(e, t)
 
         # la clave privada (d) debe ser positiva
         if (x < 0):
