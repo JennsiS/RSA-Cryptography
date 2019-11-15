@@ -25,17 +25,20 @@ def gcd(a,b):
 
 # Algoritmo de euclides extendido
 def gcdExt(a, b):
-    x, old_x = 0, 1
-    y, old_y = 1, 0
+    x, coefX = 0, 1
+    y, coefY = 1, 0
 
     while (b != 0):
-        quotient = a // b
-        a, b = b, a - quotient * b
-        old_x, x = x, old_x - quotient * x
-        old_y, y = y, old_y - quotient * y
-    return a, old_x, old_y
+        quot = a // b
+        a, b = b, a - quot * b
+        coefX, x = x, coefX - quot * x
+        coefY, y = y, coefY - quot * y
+    return a, coefX, coefY
 
-def getE(t):
+
+# Calcula la clave publica
+# Es requisito que la clave publica sea coprimo con el resultante de phi (p-1)(q-1)
+def getPublicKey(t):
     while (True):
         e = random.randrange(2, t)
         if (gcd(e, t) == 1):
@@ -59,32 +62,38 @@ def getKeys():
 
         # encontrar n y la clave publica (e)
         n = prime1 * prime2
-        t = (prime1-1) * (prime2-1) # phi
-        e = getE(t)
+        phiOfN = (prime1-1) * (prime2-1) # phi
+        e = getPublicKey(phiOfN) # se calcula la clave publica 'e'
 
-        # determinar si e*d = 1 (mod t) primos relativos
-        gcd, x, y = gcdExt(e, t)
+        # determinar si e*d = 1 (mod phiOfN) primos relativos
+        gcd, x, y = gcdExt(e, phiOfN)
 
-        # la clave privada (d) debe ser positiva
+        # Se calcula la clave privada
+        # la clave privada (d) debe ser positiva como requisito
         if (x < 0):
-            d = x + t
+            d = x + phiOfN
         else:
             d = x
         return [n, e, d] # claves: [n,publica,privada]
 
-def encrypt(msg,n,e,blockSize=2):
+def encrypt(msg,n,e):
+    # la encripcion se realiza agrupando en letras de 2 en 2 
+    blockSize = 2
+
+    # Se convierte n y e a tipo 'int'
     n = int(n)
     e = int(e)
 
-    encryptedBlocks = []
+    encryptedBlocks = [] # array que guarda los pares de letras encriptados
     textASCII = -1 
 
     # convertir a ASCII por bloques 
     if (len(msg) > 0):
-        textASCII = ord(msg[0])
+        textASCII = ord(msg[0]) # se utiliza ord() para convertir las letras a una clave numerica
 
+    # por grupos de 2 se 
     for i in range(1, len(msg)):
-        if (i % blockSize == 0):
+        if (i % blockSize == 0): # cada 2 letras se encripta (blockSize se puede cambiar si se desea agrupar mas letras)
             encryptedBlocks.append(textASCII)
             textASCII = 0
         # mult por 1000 para correr crifras 3 veces (cantidad de digitos maxima)
@@ -100,22 +109,26 @@ def encrypt(msg,n,e,blockSize=2):
     return encryptedMsg
 
 
-def decrypt(blocks,n,d,blockSize=2):
+def decrypt(encryptedMsg,n,d):
+    # la encripcion se realiza agrupando en letras de 2 en 2 
+    blockSize = 2
+
     n = int(n)
     d = int(d)
 
     # separar los bloques
-    list_blocks = blocks.split(' ')
+    allblocks = encryptedMsg.split(' ')
     intBlocks = []
 
-    for k in list_blocks:
+    # regresar a valores numericos (enteros)
+    for k in allblocks:
         intBlocks.append(int(k))
 
     msg = ""
 
     # convertir los numeros a letras
     for i in range(len(intBlocks)):
-        # se decripta elevando los numeros a d en mod n
+        # se decripta elevando los numeros a ^d en mod n
         intBlocks[i] = (intBlocks[i]**d) % n
 
         block = ""
@@ -133,13 +146,14 @@ _______________________________________________________________
                               MAIN
 '''
 
-print('\n||| CRYPT0 M3NU ||| \n 1. Generar claves \n 2. Encriptar \n 3. Decriptar')
+print('\n||| CRYPT0GRAFIA RSA ||| \n 1. Generar claves \n 2. Encriptar \n 3. Decriptar')
 
+# opciones del menu
 options = ['1','2','3']
-command = "nan"
+command = "nan" # contiene la opcion seleccionada
 
 while (command not in options):
-    command = input("\n>> Proceso a realizar? (1 / 2 / 3): ")
+    command = input("\n>> Proceso a realizar? <1 / 2 / 3>: ")
 
 
 if command == '1':
