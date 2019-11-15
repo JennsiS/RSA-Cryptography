@@ -156,16 +156,19 @@ while (command not in options):
     command = input("\n>> Proceso a realizar? <1 / 2 / 3>: ")
 
 
+# Opcion 1 para generar las llaves y se muestra el 'n' tambien
 if command == '1':
     keys = getKeys() # claves: [n,publica,privada]
     print('\nn: {}\nClave Publica: {}\nClave Privada: {}\n'.format(keys[0],keys[1],keys[2]))
 
+# Opcion 2 para encriptar un mensaje, requiere un 'n' y la clave publica (es la que tienen todas las personas)
 if command == '2':
     msg = input("\nMSG: ")
     n = input("n: ")
     e = input("Clave publica: ")
     print('>> MSG encriptado: {}\n'.format(encrypt(msg,n,e)))
 
+# Opcion 3 para decriptar un mensaje, requiere un 'n' y la clave privada (es la que solo sabe la persona que genero las llaves)
 elif (command == '3'):
     msg = input("\nMSG: ")
     n = input("n: ")
