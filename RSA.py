@@ -37,23 +37,24 @@ def gcdExt(a, b):
 
 # Generador de claves publicas y privadas
 def getKeys():
-        # seleccion de primos (los numeros 100 y 200 pueden editarse para aumentar la seguridad del cifrado)
-        # estos indican el rango de lineas de 'primes.txt' del que se seleccionaran los primos
-        r1 = random.randint(100, 200)
-        r2 = random.randint(100, 200)
 
         # importar los primos como una lista
         primesFile = open('primes.txt', 'r')
         allPrimes = primesFile.read().splitlines()
         primesFile.close()
 
-        # asignar los primos seleccionados
-        prime1 = int(allPrimes[r1])
-        prime2 = int(allPrimes[r2])
+        # seleccion de primos (los numeros 100 y 200 pueden editarse para aumentar la seguridad del cifrado)
+        # estos indican el rango de lineas de 'primes.txt' del que se seleccionaran los primos
+        lowerLineLimit = 100
+        upperLineLimit = 200
+
+        # asignar los primos seleccionados (p y q)
+        p = int(allPrimes[random.randint(lowerLineLimit, upperLineLimit)])
+        q = int(allPrimes[random.randint(lowerLineLimit, upperLineLimit)])
 
         # encontrar n y la clave publica (e)
-        n = prime1 * prime2
-        phiOfN = (prime1-1) * (prime2-1) # phi
+        n = p * q
+        phiOfN = (p-1) * (q-1) # phi
         
         # Se calcula la clave publica
         # Es requisito que la clave publica sea coprimo (gcd == 1) con el resultante de phi (p-1)(q-1)
