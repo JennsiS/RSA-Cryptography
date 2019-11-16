@@ -35,15 +35,6 @@ def gcdExt(a, b):
         coefY, y = y, coefY - quot * y
     return a, coefX, coefY
 
-
-# Calcula la clave publica
-# Es requisito que la clave publica sea coprimo con el resultante de phi (p-1)(q-1)
-def getPublicKey(t):
-    while (True):
-        e = random.randrange(2, t)
-        if (gcd(e, t) == 1):
-            return e
-
 # Generador de claves publicas y privadas
 def getKeys():
         # seleccion de primos (los numeros 100 y 200 pueden editarse para aumentar la seguridad del cifrado)
@@ -63,10 +54,16 @@ def getKeys():
         # encontrar n y la clave publica (e)
         n = prime1 * prime2
         phiOfN = (prime1-1) * (prime2-1) # phi
-        e = getPublicKey(phiOfN) # se calcula la clave publica 'e'
+        
+        # Se calcula la clave publica
+        # Es requisito que la clave publica sea coprimo (gcd == 1) con el resultante de phi (p-1)(q-1)
+        while (True):
+            e = random.randrange(2, phiOfN)
+            if (gcd(e,phiOfN) == 1):
+                break
 
         # determinar si e*d = 1 (mod phiOfN) primos relativos
-        gcd, x, y = gcdExt(e, phiOfN)
+        a, x, y = gcdExt(e, phiOfN)
 
         # Se calcula la clave privada
         # la clave privada (d) debe ser positiva como requisito
@@ -78,7 +75,6 @@ def getKeys():
 
 def encrypt(msg,n,e):
     # la encripcion se realiza agrupando en letras de 2 en 2 
-    blockSize = 2
 
     # Se convierte n y e a tipo 'int'
     n = int(n)
@@ -91,9 +87,8 @@ def encrypt(msg,n,e):
     if (len(msg) > 0):
         textASCII = ord(msg[0]) # se utiliza ord() para convertir las letras a una clave numerica
 
-    # por grupos de 2 se 
     for i in range(1, len(msg)):
-        if (i % blockSize == 0): # cada 2 letras se encripta (blockSize se puede cambiar si se desea agrupar mas letras)
+        if (i%2 == 0): # cada 2 letras se encripta
             encryptedBlocks.append(textASCII)
             textASCII = 0
         # mult por 1000 para correr crifras 3 veces (cantidad de digitos maxima)
@@ -110,8 +105,6 @@ def encrypt(msg,n,e):
 
 
 def decrypt(encryptedMsg,n,d):
-    # la encripcion se realiza agrupando en letras de 2 en 2 
-    blockSize = 2
 
     n = int(n)
     d = int(d)
@@ -133,8 +126,8 @@ def decrypt(encryptedMsg,n,d):
 
         block = ""
         
-        # revertir cada bloque de ASCII a letras y concatenar en msg
-        for c in range(blockSize):
+        # revertir cada bloque (de tamanio 2) de ASCII a letras y concatenar en msg
+        for c in range(2):
             block = chr(intBlocks[i] % 1000) + block
             intBlocks[i] //= 1000
         msg += block
@@ -166,6 +159,7 @@ if command == '2':
     msg = input("\nMSG: ")
     n = input("n: ")
     e = input("Clave publica: ")
+    print("Encriptando...")
     print('>> MSG encriptado: {}\n'.format(encrypt(msg,n,e)))
 
 # Opcion 3 para decriptar un mensaje, requiere un 'n' y la clave privada (es la que solo sabe la persona que genero las llaves)
@@ -173,7 +167,8 @@ elif (command == '3'):
     msg = input("\nMSG: ")
     n = input("n: ")
     d = input("Clave privada: ")
-    print('>> MSG decriptado: {}\n'.format(decrypt(msg,n,d)))
+    print("Desencriptando...")
+    print('>> MSG desencriptado: {}\n'.format(decrypt(msg,n,d)))
 
 
 
